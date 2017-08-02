@@ -24,3 +24,7 @@ ListView {
 TextField {
   color: white;
 }
+
+.deleteBackground {
+  background-color: #000000;
+}

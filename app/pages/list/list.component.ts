@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnInit, ViewChild } from "@angular/core";
+import { Component, ElementRef, NgZone, OnInit, ViewChild } from "@angular/core";
 import { Grocery } from "../../shared/grocery/grocery";
 import { GroceryListService } from "../../shared/grocery/grocery-list.service";
 import { TextField } from "ui/text-field";
@@ -17,20 +17,25 @@ export class ListComponent implements OnInit {
   listLoaded = false;
   @ViewChild("groceryTextField") groceryTextField: ElementRef;
 
-  constructor(private groceryListService: GroceryListService) {
+  constructor(private groceryListService: GroceryListService, private zone: NgZone) {
 
   }
 
   ngOnInit() {
     this.isLoading = true;
-    this.groceryListService.load()
-      .subscribe(loadedGroceries => {
-        loadedGroceries.forEach((groceryObject) => {
-          this.groceryList.unshift(groceryObject);
-        });
-        this.isLoading = false;
-        this.listLoaded = true;
+    this.load()
+  }
+
+  load() {
+    console.log('this is load working')
+     this.groceryListService.load()
+    .subscribe(loadedGroceries => {
+      loadedGroceries.forEach((groceryObject) => {
+        this.groceryList.unshift(groceryObject);
       });
+      this.isLoading = false;
+      this.listLoaded = true;
+    });
   }
 
   add() {
@@ -65,5 +70,22 @@ export class ListComponent implements OnInit {
       .join(", ")
       .trim();
     SocialShare.shareText(listString);
+  }
+
+  delete(grocery: Grocery) {
+    this.groceryListService.delete(grocery.id)
+      .subscribe(() =>{
+       this.zone.run(() => {
+          let index = this.groceryList.indexOf(grocery);
+          this.groceryList.splice(index, 1);
+        });
+      }),
+      () => {
+        alert({
+          message: "An error occured while removing an item from your list.",
+          okButtonText: "Ok"
+        })
+      }
+
   }
 }
